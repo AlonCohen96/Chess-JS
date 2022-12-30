@@ -1,5 +1,11 @@
 // Code by Alon Cohen
-//-to-do: make it so entire team blinks to indicate who's turn it is until piece is chosen
+//-to-do:
+// instead of bold when hovered, do a text-shadow or smth
+// instead of border around valid fields, make background color effect change or smth
+// when pawn reaches enemy line it should light up purple and player can trade the pawn for dead player
+// Rochade
+// touchscreen
+// Design
 
 function pickField(event) {
     const field = event.target
@@ -70,10 +76,7 @@ function switchCurrentTeam(){
         case 'black': currentTeam = 'white'; break;
     }
     for (let piece of pieces){
-        switch (piece.turn){
-            case true: piece.turn = false; break;
-            case false: piece.turn = true; break;
-        }
+        piece.turn = !piece.turn
     }
 }
 
@@ -105,26 +108,23 @@ function addVisualEventListeners(){
     for (let field of fields){
         const hoveredPiece = pieces.find(piece => piece.currentPosition === field.id)
         if (field.textContent !== '' && hoveredPiece.turn) {
-            field.addEventListener('mouseover', add_CSS_hover_class)
-            field.addEventListener('mouseout', remove_CSS_hover_class)
+            field.addEventListener('mouseover', toggle_CSS_hover_class)
+            field.addEventListener('mouseout', toggle_CSS_hover_class)
         }
     }
 }
 
 function removeVisualEventListeners(){
     for (let field of fields){
-        field.removeEventListener('mouseover', add_CSS_hover_class)
-        field.removeEventListener('mouseout', remove_CSS_hover_class)
+        field.removeEventListener('mouseover', toggle_CSS_hover_class)
+        field.removeEventListener('mouseout', toggle_CSS_hover_class)
     }
 }
 
-function add_CSS_hover_class(event){
-    event.target.classList.add('hover')
+function toggle_CSS_hover_class(event){
+    event.target.classList.toggle('hover')
 }
 
-function remove_CSS_hover_class(event){
-    event.target.classList.remove('hover')
-}
 
 function highlightValidFields(){
     for (let field of chosenPiece.validFields){
@@ -189,6 +189,7 @@ class Pawn {
     }
 }
 
+
 class WhitePawn extends Pawn{
     getValidFields(){
         this.validFields = []
@@ -228,6 +229,7 @@ class WhitePawn extends Pawn{
         }
     }
 }
+
 
 class BlackPawn extends Pawn{
     getValidFields(){
@@ -269,43 +271,421 @@ class BlackPawn extends Pawn{
     }
 }
 
-class Rook extends Pawn{
-    getValidFields(){
+
+class Rook extends Pawn {
+    getValidFields() {
         this.validFields = []
-        const startField_X = field_coords[this.currentPosition][0]
-        const startField_Y = field_coords[this.currentPosition][1]
-        for (let field of fields){
-            const targetField_X = field_coords[field.id][0]
-            const targetField_Y = field_coords[field.id][1]
-            if (field.id !== this.currentPosition
-                && ( targetField_X === startField_X || targetField_Y === startField_Y ) ){
-                this.validFields.push(field)
+        this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] + i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
             }
         }
-        const stopFields_Y = []
-        for (let field of this.validFields){
-            const targetField_X = field_coords[field.id][0]
-            const targetField_Y = field_coords[field.id][1]
-            if (field.textContent !== ''
-                && targetField_X === startField_X ) {
-                stopFields_Y.push(targetField_Y)
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] - i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
             }
         }
-        let closestOccupiedFieldUp_Y = Math.max(...stopFields_Y)
-        let closestOccupiedFieldDown_Y = Math.min(...stopFields_Y)
-        const tempList = []
-        for (let field of this.validFields){
-            const targetField_Y = field_coords[field.id][1]
-            if (targetField_Y < closestOccupiedFieldDown_Y
-                && targetField_Y > closestOccupiedFieldUp_Y){
-                tempList.push(field)
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] + i && field_coords[ID][1] === pieceCoords[1] )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
             }
         }
-        this.validFields = tempList
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] - i && field_coords[ID][1] === pieceCoords[1] )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    getValidTargets(){
+        //
     }
 
-    getValidTargets(){
+}
+
+class Knight extends Pawn {
+    getValidFields() {
+        this.validFields = []
         this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+        for (let field of fields){
+            const targetCoords = field_coords[field.id]
+            if (   ( targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]+2 )
+                || ( targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]+2 )
+                || ( targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]-2 )
+                || ( targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]-2 )
+                || ( targetCoords[0] === pieceCoords[0]-2 && targetCoords[1] === pieceCoords[1]+1 )
+                || ( targetCoords[0] === pieceCoords[0]+2 && targetCoords[1] === pieceCoords[1]+1 )
+                || ( targetCoords[0] === pieceCoords[0]-2 && targetCoords[1] === pieceCoords[1]-1 )
+                || ( targetCoords[0] === pieceCoords[0]+2 && targetCoords[1] === pieceCoords[1]-1 ) ){
+                if (field.textContent === ''){
+                    this.validFields.push(field)
+                } if (field.textContent !== '') {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === field.id)
+                    if (targetPiece && targetPiece.team !== this.team) {
+                        this.validTargets.push(field)
+                    }
+                }
+            }
+        }
+    }
+
+    getValidTargets() {
+        // chill
+    }
+}
+
+class Bishop extends Pawn {
+    getValidFields() {
+        this.validFields = []
+        this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]+i && field_coords[ID][1] === pieceCoords[1]+i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]-i && field_coords[ID][1] === pieceCoords[1]+i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]+i && field_coords[ID][1] === pieceCoords[1]-i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]-i && field_coords[ID][1] === pieceCoords[1]-i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    getValidTargets() {
+        // Later code for all pieces should be refactored to combine getValidFields() and getValidTarget() into one method, as they depend heavily on each other
+    }
+}
+
+class Queen extends Pawn{
+    getValidFields() {
+        this.validFields = []
+        this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] + i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] - i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] + i && field_coords[ID][1] === pieceCoords[1] )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i = 1; i <= 7; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] - i && field_coords[ID][1] === pieceCoords[1] )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team) {
+                        break;
+                    } else {
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]+i && field_coords[ID][1] === pieceCoords[1]+i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]-i && field_coords[ID][1] === pieceCoords[1]+i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]+i && field_coords[ID][1] === pieceCoords[1]-i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+
+        for (let i=1; i <= 7; i++){
+            const targetID = Object.keys(field_coords).find( ID => field_coords[ID][0] === pieceCoords[0]-i && field_coords[ID][1] === pieceCoords[1]-i )
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if ( targetField.textContent === '') {
+                    this.validFields.push(targetField)
+                } else {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
+                    if (targetPiece.team === this.team){
+                        break;
+                    } else{
+                        this.validTargets.push(targetField)
+                        break;
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+    getValidTargets(){
+        //
+    }
+}
+
+class King extends Pawn{
+    getValidFields(){
+        this.validFields = []
+        this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+        for (let field of fields){
+            const targetCoords = field_coords[field.id]
+            if (   ( targetCoords[0] === pieceCoords[0] && targetCoords[1] === pieceCoords[1]+1 )
+                || ( targetCoords[0] === pieceCoords[0] && targetCoords[1] === pieceCoords[1]-1 )
+                || ( targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]+1 )
+                || ( targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]-1 )
+                || ( targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1] )
+                || ( targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]+1 )
+                || ( targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]-1 )
+                || ( targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1] ) ){
+                if (field.textContent === ''){
+                    this.validFields.push(field)
+                } if (field.textContent !== '') {
+                    const targetPiece = pieces.find(piece => piece.currentPosition === field.id)
+                    if (targetPiece && targetPiece.team !== this.team) {
+                        this.validTargets.push(field)
+                    }
+                }
+            }
+        }
+    }
+    getValidTargets(){
+        //
     }
 }
 
@@ -314,7 +694,7 @@ let pieces = []
 let heavenWhite = []
 let heavenBlack = []
 
-const pawn1_white = new WhitePawn('white', true, 'a2', '♙')
+const pawn1_white = new WhitePawn('white', true,'a2', '♙')
 const pawn2_white = new WhitePawn('white', true,'b2', '♙')
 const pawn3_white = new WhitePawn('white', true,'c2', '♙')
 const pawn4_white = new WhitePawn('white', true,'d2', '♙')
@@ -326,6 +706,16 @@ const pawn8_white = new WhitePawn('white', true,'h2', '♙')
 const rook1_white = new Rook('white', true, 'a1', '♖')
 const rook2_white = new Rook('white', true, 'h1', '♖')
 
+const knight1_white = new Knight('white', true, 'b1', '♘')
+const knight2_white = new Knight('white', true, 'c1', '♘')
+
+const bishop1_white = new Bishop('white', true, 'c1', '♗')
+const bishop2_white = new Bishop('white', true, 'f1', '♗')
+
+const queen_white = new Queen('white', true, 'd1', '♕')
+
+const king_white = new King('white', true, 'e1', '♔')
+
 const pawn1_black = new BlackPawn('black', false, 'a7', '♟')
 const pawn2_black = new BlackPawn('black', false, 'b7', '♟')
 const pawn3_black = new BlackPawn('black', false, 'c7', '♟')
@@ -335,9 +725,31 @@ const pawn6_black = new BlackPawn('black', false, 'f7', '♟')
 const pawn7_black = new BlackPawn('black', false, 'g7', '♟')
 const pawn8_black = new BlackPawn('black', false, 'h7', '♟')
 
+const rook1_black = new Rook('black', false, 'a8', '♜')
+const rook2_black = new Rook('black', false, 'h8', '♜')
+
+const knight1_black = new Knight('black', false, 'b8', '♞')
+const knight2_black = new Knight('black', false, 'g8', '♞')
+
+const bishop1_black = new Bishop('black', false, 'c8', '♝')
+const bishop2_black = new Bishop('black', false, 'f8', '♝')
+
+const queen_black = new Queen('black', false, 'd8', '♛')
+
+const king_black = new King('black', false, 'e8', '♚')
+
 pieces.push(pawn1_white, pawn2_white, pawn3_white, pawn4_white, pawn5_white, pawn6_white, pawn7_white, pawn8_white,
             rook1_white, rook2_white,
-            pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black)
+            knight1_white, knight2_white,
+            bishop1_white, bishop2_white,
+            queen_white,
+            king_white,
+            pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
+            rook1_black, rook2_black,
+            knight1_black, knight2_black,
+            bishop1_black, bishop2_black,
+            queen_black,
+            king_black)
 
 
 //Rendering pieces on the board
@@ -382,6 +794,49 @@ renderInfo(currentTeamDisplay, 'Current Team: ' + currentTeam)
 addPickFieldEventListeners()
 addVisualEventListeners()
 highlightCurrentTeam()
+
+/*
+class Rook extends Pawn{
+    getValidFields(){
+        this.validFields = []
+        const startField_X = field_coords[this.currentPosition][0]
+        const startField_Y = field_coords[this.currentPosition][1]
+        for (let field of fields){
+            const targetField_X = field_coords[field.id][0]
+            const targetField_Y = field_coords[field.id][1]
+            if (field.id !== this.currentPosition
+                && ( targetField_X === startField_X || targetField_Y === startField_Y ) ){
+                this.validFields.push(field)
+            }
+        }
+        const stopFields_Y = []
+        for (let field of this.validFields){
+            const targetField_X = field_coords[field.id][0]
+            const targetField_Y = field_coords[field.id][1]
+            if (field.textContent !== ''
+                && targetField_X === startField_X ) {
+                stopFields_Y.push(targetField_Y)
+            }
+        }
+        let closestOccupiedFieldUp_Y = Math.max(...stopFields_Y)
+        let closestOccupiedFieldDown_Y = Math.min(...stopFields_Y)
+        const tempList = []
+        for (let field of this.validFields){
+            const targetField_Y = field_coords[field.id][1]
+            if (targetField_Y < closestOccupiedFieldDown_Y
+                && targetField_Y > closestOccupiedFieldUp_Y){
+                tempList.push(field)
+            }
+        }
+        this.validFields = tempList
+    }
+
+    getValidTargets(){
+        this.validTargets = []
+    }
+}
+*/
+
 
 
 /*
