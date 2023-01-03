@@ -2,10 +2,12 @@
 //-to-do:
 // instead of bold when hovered, do a text-shadow or smth
 // instead of border around valid fields, make background color effect change or smth
-// when pawn reaches enemy line it should light up purple and player can trade the pawn for dead player
 // Rochade
+// checkmate check
+// additional game modes: trojan horse, spartan battle, battle royale, boss fight?
 // touchscreen
 // Design
+
 
 function pickField(event) {
     const field = event.target
@@ -15,31 +17,32 @@ function pickField(event) {
         chosenPiece.getValidFields()
         highlightValidFields()
         removeHighlightValidTargets()
-        chosenPiece.getValidTargets()
         highlightValidTargets()
+        removeHighlightPromotionField()
+        highlightPromotionField()
         removeHighlightCurrentTeam()
         removePickFieldEventListeners()
         addMoveEventListeners()
     }
 }
 
-
 function move(event){
-    const field = event.target
-    const victim = pieces.find(piece => piece.currentPosition === field.id)
+    const targetField = event.target
+    const victim = pieces.find(piece => piece.currentPosition === targetField.id)
 
-    if (chosenPiece.validFields.includes(field)) {
-        land(event)
-    } else if (chosenPiece.validTargets.includes(field)){
+    if (chosenPiece.promotionFields.includes(targetField)){
+        if (victim){
+            kill(victim)
+        }
+        landOnPromotionField(event)
+    } else if (chosenPiece.validTargets.includes(targetField)){
         kill(victim)
         land(event)
+    } else if (chosenPiece.validFields.includes(targetField)) {
+        land(event)
     } else {
-        if (victim === undefined) {
-            // Do nothing.
-        } else {
-            if (victim.team === chosenPiece.team){
-                pickField(event)
-            }
+        if (victim && victim.team === chosenPiece.team) {
+            pickField(event)
         }
     }
 }
@@ -48,6 +51,7 @@ function land(event){
     chosenPiece.emptyOldField()
     chosenPiece.currentPosition = event.target.id
     chosenPiece.render()
+    checkGameOver()
     switchCurrentTeam()
     renderInfo(currentTeamDisplay, 'Current Team: ' + currentTeam)
     removeMoveEventListeners()
@@ -56,18 +60,36 @@ function land(event){
     addVisualEventListeners()
     removeHighlightValidFields()
     removeHighlightValidTargets()
+    removeHighlightPromotionField()
     highlightCurrentTeam()
 }
 
 function kill(victim){
     const heavenID = 'heaven-'+victim.team
     victim.currentPosition = heavenID
-    document.getElementById(heavenID).textContent += victim.pieceUnicode
-    switch (victim.team){
-        case 'white': heavenWhite.push(victim); break;
-        case 'black': heavenBlack.push(victim); break;
+    if (victim.team === 'white') {
+        switch (victim.constructor.name){
+            case 'WhitePawn': heavenWhite.push(victim); renderPieceToHeaven('pawns-white', victim); break;
+            case 'Rook'     : heavenWhite.push(victim); renderPieceToHeaven('rooks-white', victim); break;
+            case 'Knight'   : heavenWhite.push(victim); renderPieceToHeaven('knights-white', victim); break;
+            case 'Bishop'   : heavenWhite.push(victim); renderPieceToHeaven('bishops-white', victim); break;
+            case 'Queen'    : heavenWhite.push(victim); renderPieceToHeaven('queen-white', victim); break;
+        }
+    } else {
+        switch (victim.constructor.name){
+            case 'BlackPawn': heavenBlack.push(victim); renderPieceToHeaven('pawns-black', victim); break;
+            case 'Rook'     : heavenBlack.push(victim); renderPieceToHeaven('rooks-black', victim); break;
+            case 'Knight'   : heavenBlack.push(victim); renderPieceToHeaven('knights-black', victim); break;
+            case 'Bishop'   : heavenBlack.push(victim); renderPieceToHeaven('bishops-black', victim); break;
+            case 'Queen'    : heavenBlack.push(victim); renderPieceToHeaven('queen-black', victim); break;
+        }
     }
     pieces = pieces.filter(victim => victim.currentPosition !== heavenID)
+}
+
+
+function renderPieceToHeaven(ID, victim){
+    document.getElementById(ID).textContent += victim.pieceUnicode
 }
 
 function switchCurrentTeam(){
@@ -78,6 +100,81 @@ function switchCurrentTeam(){
     for (let piece of pieces){
         piece.turn = !piece.turn
     }
+}
+
+function checkGameOver(){
+    if (!pieces.includes(king_white) ){
+        console.log('black team won!')
+    }
+    if (!pieces.includes(king_black) ){
+        console.log('white team won!')
+    }
+}
+
+function landOnPromotionField(event){
+    chosenPiece.emptyOldField()
+    chosenPiece.currentPosition = event.target.id
+    chosenPiece.render()
+    removeMoveEventListeners()
+    removeVisualEventListeners()
+    removeHighlightValidFields()
+    removeHighlightValidTargets()
+    removeHighlightPromotionField()
+    highlightPromotionOptions()
+    addPromoteEventListeners()
+}
+
+function promote(event){
+    chosenPiece.emptyOldField()
+    spawn(event).render()
+    switchCurrentTeam()
+    renderInfo(currentTeamDisplay, 'Current Team: ' + currentTeam)
+    pieces = pieces.filter(victim => victim !== chosenPiece)
+    removePromoteEventListeners()
+    removeHighlightPromotionOptions()
+    addPickFieldEventListeners()
+    addVisualEventListeners()
+    highlightCurrentTeam()
+}
+
+function spawn (event){
+    let newPiece
+    switch (event.target.id){
+        case 'rooks-white': newPiece = new Rook(currentTeam, true, chosenPiece.currentPosition, '♖'); break;
+        case 'knights-white': newPiece = new Knight(currentTeam, true, chosenPiece.currentPosition, '♘'); break;
+        case 'bishops-white': newPiece = new Bishop(currentTeam, true, chosenPiece.currentPosition, '♗'); break;
+        case 'queen-white': newPiece = new Queen(currentTeam, true, chosenPiece.currentPosition, '♕'); break;
+        case 'rooks-black': newPiece = new Rook(currentTeam, true, chosenPiece.currentPosition, '♜'); break;
+        case 'knights-black': newPiece = new Knight(currentTeam, true, chosenPiece.currentPosition, '♞'); break;
+        case 'bishops-black': newPiece = new Bishop(currentTeam, true, chosenPiece.currentPosition, '♝'); break;
+        case 'queen-black': newPiece = new Queen(currentTeam, true, chosenPiece.currentPosition, '♛'); break;
+    }
+    pieces.push(newPiece)
+    return newPiece
+}
+
+function addPromoteEventListeners(){
+    document.getElementById('rooks-white').addEventListener('click', promote)
+    document.getElementById('knights-white').addEventListener('click', promote)
+    document.getElementById('bishops-white').addEventListener('click', promote)
+    document.getElementById('queen-white').addEventListener('click', promote)
+
+    document.getElementById('rooks-black').addEventListener('click', promote)
+    document.getElementById('knights-black').addEventListener('click', promote)
+    document.getElementById('bishops-black').addEventListener('click', promote)
+    document.getElementById('queen-black').addEventListener('click', promote)
+}
+
+function removePromoteEventListeners(){
+    document.getElementById('rooks-white').removeEventListener('click', promote)
+    document.getElementById('knights-white').removeEventListener('click', promote)
+    document.getElementById('bishops-white').removeEventListener('click', promote)
+    document.getElementById('queen-white').removeEventListener('click', promote)
+
+    document.getElementById('rooks-black').removeEventListener('click', promote)
+    document.getElementById('knights-black').removeEventListener('click', promote)
+    document.getElementById('bishops-black').removeEventListener('click', promote)
+    document.getElementById('queen-black').removeEventListener('click', promote)
 }
 
 function addPickFieldEventListeners(){
@@ -150,6 +247,18 @@ function highlightValidTargets(){
     }
 }
 
+function highlightPromotionField(){
+    for (let field of chosenPiece.promotionFields){
+        field.classList.add('promotion-field')
+    }
+}
+
+function removeHighlightPromotionField(){
+    for (let field of fields){
+        field.classList.remove('promotion-field')
+    }
+}
+
 function highlightCurrentTeam(){
     for (let piece of pieces){
         if (piece.team === currentTeam){
@@ -165,6 +274,32 @@ function removeHighlightCurrentTeam(){
     }
 }
 
+function highlightPromotionOptions(){
+    if (currentTeam === 'white'){
+        document.getElementById('rooks-white').classList.add('blink')
+        document.getElementById('bishops-white').classList.add('blink')
+        document.getElementById('knights-white').classList.add('blink')
+        document.getElementById('queen-white').classList.add('blink')
+    } else {
+        document.getElementById('rooks-black').classList.add('blink')
+        document.getElementById('bishops-black').classList.add('blink')
+        document.getElementById('knights-black').classList.add('blink')
+        document.getElementById('queen-black').classList.add('blink')
+    }
+}
+
+function removeHighlightPromotionOptions(){
+    document.getElementById('rooks-white').classList.remove('blink')
+    document.getElementById('bishops-white').classList.remove('blink')
+    document.getElementById('knights-white').classList.remove('blink')
+    document.getElementById('queen-white').classList.remove('blink')
+
+    document.getElementById('rooks-black').classList.remove('blink')
+    document.getElementById('bishops-black').classList.remove('blink')
+    document.getElementById('knights-black').classList.remove('blink')
+    document.getElementById('queen-black').classList.remove('blink')
+}
+
 function renderInfo(node, content){
     document.getElementById(node.id).textContent = content
 }
@@ -178,6 +313,7 @@ class Pawn {
         this.pieceUnicode = pieceUnicode
         this.validFields = []
         this.validTargets = []
+        this.promotionFields = []
     }
 
     render(){
@@ -191,86 +327,103 @@ class Pawn {
 
 
 class WhitePawn extends Pawn{
-    getValidFields(){
+    getValidFields() {
         this.validFields = []
-        for (let field of fields){
-            const startFieldIDLetter = this.currentPosition[0]
-            const targetFieldIDLetter = field.id[0]
-            const startFieldIDNumber = Number(this.currentPosition[1])
-            const targetFieldIDNumber = Number(field.id[1])
-            const inBetweenFieldID = targetFieldIDLetter + (targetFieldIDNumber-1).toString()
-            const inBetweenField = fields.find(field => inBetweenFieldID === field.id)
-            if (startFieldIDLetter === targetFieldIDLetter
-                && startFieldIDNumber < targetFieldIDNumber
-                && startFieldIDNumber + 2 >= targetFieldIDNumber
-                && field.textContent === ''
-                && ( inBetweenField.textContent === '' || this.currentPosition === inBetweenFieldID ) )  {
-                this.validFields.push(field)
+        this.validTargets = []
+        this.promotionFields = []
+        const pieceCoords = field_coords[this.currentPosition]
+
+        for (let i = 1; i <= 2; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] + i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    if (this.checkPromoteOption(targetField)){
+                        this.promotionFields.push(targetField)
+                    } else{
+                        this.validFields.push(targetField)
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                break;
             }
         }
-    }
 
-    getValidTargets(){
-        this.validTargets = []
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         for (let field of fields){
-            const target = pieces.find(piece => piece.currentPosition === field.id)
-            if (target){
-                const startFieldIDLetterIndex = letters.indexOf( this.currentPosition[0] )
-                const targetFieldIDLetterIndex = letters.indexOf( target.currentPosition[0] )
-                const startFieldIDNumber = Number( this.currentPosition[1] )
-                const targetFieldIDNumber = Number( target.currentPosition[1] )
-                if (target.team !== this.team
-                    && startFieldIDNumber + 1 === targetFieldIDNumber
-                    && ( startFieldIDLetterIndex + 1 === targetFieldIDLetterIndex || startFieldIDLetterIndex - 1 === targetFieldIDLetterIndex ) ){
+            const targetCoords = field_coords[field.id]
+            if (field.textContent !== ''
+                &&   ( (targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]+1)
+                    || (targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]+1) ) ){
+                const targetPiece = pieces.find(piece => piece.currentPosition === field.id)
+                if (targetPiece && targetPiece.team !== this.team){
                     this.validTargets.push(field)
+                    if (this.checkPromoteOption(field)) {
+                        this.promotionFields.push(field)
+                    }
                 }
             }
         }
     }
+
+    checkPromoteOption(targetField){
+        const promotionField_IDs = ['a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8']
+        if ( promotionField_IDs.includes(targetField.id) ) {
+            return true
+        }
+    }
+
 }
 
 
 class BlackPawn extends Pawn{
-    getValidFields(){
+    getValidFields() {
         this.validFields = []
-        for (let field of fields){
-            const startFieldIDLetter = this.currentPosition[0]
-            const targetFieldIDLetter = field.id[0]
-            const startFieldIDNumber = Number(this.currentPosition[1])
-            const targetFieldIDNumber = Number(field.id[1])
-            const inBetweenFieldID = targetFieldIDLetter + (targetFieldIDNumber+1).toString()
-            const inBetweenField = fields.find(field => inBetweenFieldID === field.id)
-            if (startFieldIDLetter === targetFieldIDLetter
-                && startFieldIDNumber > targetFieldIDNumber
-                && startFieldIDNumber - 2 <= targetFieldIDNumber
-                && field.textContent === ''
-                && ( inBetweenField.textContent === '' || this.currentPosition === inBetweenFieldID ) )  {
-                this.validFields.push(field)
+        this.validTargets = []
+        const pieceCoords = field_coords[this.currentPosition]
+
+        for (let i = 1; i <= 2; i++) {
+            const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] - i)
+            const targetField = fields.find(field => field.id === targetID)
+            if (targetField) {
+                if (targetField.textContent === '') {
+                    if (this.checkPromoteOption(targetField)){
+                        this.promotionFields.push(targetField)
+                    } else{
+                        this.validFields.push(targetField)
+                    }
+                } else {
+                    break;
+                }
+            } else {
+                break;
             }
         }
-    }
 
-    getValidTargets(){
-        this.validTargets = []
-        const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
         for (let field of fields){
-            const target = pieces.find(piece => piece.currentPosition === field.id)
-            if (target){
-                const startFieldIDLetterIndex = letters.indexOf( this.currentPosition[0] )
-                const targetFieldIDLetterIndex = letters.indexOf( target.currentPosition[0] )
-                const startFieldIDNumber = Number( this.currentPosition[1] )
-                const targetFieldIDNumber = Number( target.currentPosition[1] )
-                if (target.team !== this.team
-                    && startFieldIDNumber - 1 === targetFieldIDNumber
-                    && ( startFieldIDLetterIndex + 1 === targetFieldIDLetterIndex || startFieldIDLetterIndex - 1 === targetFieldIDLetterIndex ) ){
+            const targetCoords = field_coords[field.id]
+            if (field.textContent !== ''
+                &&   ( (targetCoords[0] === pieceCoords[0]+1 && targetCoords[1] === pieceCoords[1]-1)
+                    || (targetCoords[0] === pieceCoords[0]-1 && targetCoords[1] === pieceCoords[1]-1) ) ){
+                const targetPiece = pieces.find(piece => piece.currentPosition === field.id)
+                if (targetPiece && targetPiece.team !== this.team){
                     this.validTargets.push(field)
+                    if (this.checkPromoteOption(field)) {
+                        this.promotionFields.push(field)
+                    }
                 }
             }
         }
     }
-}
 
+    checkPromoteOption(targetField){
+        const promotionField_IDs = ['a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1']
+        if ( promotionField_IDs.includes(targetField.id) ) {
+            return true
+        }
+    }
+}
 
 class Rook extends Pawn {
     getValidFields() {
@@ -286,7 +439,7 @@ class Rook extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -306,7 +459,7 @@ class Rook extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -326,7 +479,7 @@ class Rook extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -346,7 +499,7 @@ class Rook extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -358,11 +511,8 @@ class Rook extends Pawn {
             }
         }
     }
-    getValidTargets(){
-        //
-    }
-
 }
+
 
 class Knight extends Pawn {
     getValidFields() {
@@ -390,10 +540,6 @@ class Knight extends Pawn {
             }
         }
     }
-
-    getValidTargets() {
-        // chill
-    }
 }
 
 class Bishop extends Pawn {
@@ -410,7 +556,7 @@ class Bishop extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -430,7 +576,7 @@ class Bishop extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -450,7 +596,7 @@ class Bishop extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -470,7 +616,7 @@ class Bishop extends Pawn {
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -481,10 +627,6 @@ class Bishop extends Pawn {
                 break;
             }
         }
-    }
-
-    getValidTargets() {
-        // Later code for all pieces should be refactored to combine getValidFields() and getValidTarget() into one method, as they depend heavily on each other
     }
 }
 
@@ -502,7 +644,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -522,7 +664,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -542,7 +684,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -562,7 +704,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team) {
+                    if (targetPiece && targetPiece.team === this.team) {
                         break;
                     } else {
                         this.validTargets.push(targetField)
@@ -581,7 +723,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -601,7 +743,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -621,7 +763,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -641,7 +783,7 @@ class Queen extends Pawn{
                     this.validFields.push(targetField)
                 } else {
                     const targetPiece = pieces.find(piece => piece.currentPosition === targetField.id)
-                    if (targetPiece.team === this.team){
+                    if (targetPiece && targetPiece.team === this.team){
                         break;
                     } else{
                         this.validTargets.push(targetField)
@@ -652,9 +794,6 @@ class Queen extends Pawn{
                 break;
             }
         }
-    }
-    getValidTargets(){
-        //
     }
 }
 
@@ -684,9 +823,6 @@ class King extends Pawn{
             }
         }
     }
-    getValidTargets(){
-        //
-    }
 }
 
 // Creating pieces
@@ -696,18 +832,18 @@ let heavenBlack = []
 
 const pawn1_white = new WhitePawn('white', true,'a2', '♙')
 const pawn2_white = new WhitePawn('white', true,'b2', '♙')
-const pawn3_white = new WhitePawn('white', true,'c2', '♙')
+const pawn3_white = new WhitePawn('white', true,'c6', '♙')
 const pawn4_white = new WhitePawn('white', true,'d2', '♙')
 const pawn5_white = new WhitePawn('white', true,'e2', '♙')
 const pawn6_white = new WhitePawn('white', true,'f2', '♙')
 const pawn7_white = new WhitePawn('white', true,'g2', '♙')
 const pawn8_white = new WhitePawn('white', true,'h2', '♙')
 
-const rook1_white = new Rook('white', true, 'a1', '♖')
+const rook1_white = new Rook('white', true, 'a6', '♖')
 const rook2_white = new Rook('white', true, 'h1', '♖')
 
 const knight1_white = new Knight('white', true, 'b1', '♘')
-const knight2_white = new Knight('white', true, 'c1', '♘')
+const knight2_white = new Knight('white', true, 'g1', '♘')
 
 const bishop1_white = new Bishop('white', true, 'c1', '♗')
 const bishop2_white = new Bishop('white', true, 'f1', '♗')
@@ -744,10 +880,10 @@ pieces.push(pawn1_white, pawn2_white, pawn3_white, pawn4_white, pawn5_white, paw
             bishop1_white, bishop2_white,
             queen_white,
             king_white,
-            pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
+            pawn1_black, pawn2_black, /*pawn3_black,*/ pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
             rook1_black, rook2_black,
             knight1_black, knight2_black,
-            bishop1_black, bishop2_black,
+            /*bishop1_black,*/ bishop2_black,
             queen_black,
             king_black)
 
@@ -778,8 +914,8 @@ const field_coords = {a1: [1, 1], a2: [1, 2], a3: [1, 3], a4: [1, 4], a5: [1, 5]
                       h1: [8, 1], h2: [8, 2], h3: [8, 3], h4: [8, 4], h5: [8, 5], h6: [8, 6], h7: [8, 7], h8: [8, 8]}
 
 const fields = []
-for (let field of field_IDs){
-    fields.push(document.getElementById(field))
+for (let field_ID of field_IDs){
+    fields.push(document.getElementById(field_ID))
 }
 
 
@@ -795,86 +931,60 @@ addPickFieldEventListeners()
 addVisualEventListeners()
 highlightCurrentTeam()
 
-/*
-class Rook extends Pawn{
-    getValidFields(){
-        this.validFields = []
-        const startField_X = field_coords[this.currentPosition][0]
-        const startField_Y = field_coords[this.currentPosition][1]
-        for (let field of fields){
-            const targetField_X = field_coords[field.id][0]
-            const targetField_Y = field_coords[field.id][1]
-            if (field.id !== this.currentPosition
-                && ( targetField_X === startField_X || targetField_Y === startField_Y ) ){
-                this.validFields.push(field)
-            }
-        }
-        const stopFields_Y = []
-        for (let field of this.validFields){
-            const targetField_X = field_coords[field.id][0]
-            const targetField_Y = field_coords[field.id][1]
-            if (field.textContent !== ''
-                && targetField_X === startField_X ) {
-                stopFields_Y.push(targetField_Y)
-            }
-        }
-        let closestOccupiedFieldUp_Y = Math.max(...stopFields_Y)
-        let closestOccupiedFieldDown_Y = Math.min(...stopFields_Y)
-        const tempList = []
-        for (let field of this.validFields){
-            const targetField_Y = field_coords[field.id][1]
-            if (targetField_Y < closestOccupiedFieldDown_Y
-                && targetField_Y > closestOccupiedFieldUp_Y){
-                tempList.push(field)
-            }
-        }
-        this.validFields = tempList
-    }
 
-    getValidTargets(){
-        this.validTargets = []
+/*
+function scanForCheck(kingPiece, kingField){
+    const attackingPieces = pieces.filter(piece => piece.team === chosenPiece.team)
+    for (let attackingPiece of attackingPieces){
+        attackingPiece.getValidFields()
+        if (attackingPiece.validTargets.includes(kingField)) {
+            switch ( scanForCheckmate(kingPiece,kingField,attackingPiece) ){
+                //if returns true call gameOver()
+                case true : console.log('game over'); return; break;
+                case false: console.log('check but not checkmate'); break;
+            }
+            highlightCheck()
+            //break; maybe this is needed
+        }
     }
 }
-*/
 
 
+function scanForCheckmate(kingPiece, kingField, attackingPiece){
+    console.log('checking for checkmate')
+    const defendingPieces = pieces.filter(piece => piece.team !== chosenPiece.team)
 
-/*
-class Rook extends Pawn{
-    getValidFields(){
-        this.validFields = []
-        this.stopFieldsY_Axis = []
-        this.stopFieldsY_Axis_IDNumbers = []
-        const startFieldIDLetter = this.currentPosition[0]
-        for (let field of fields){
-            const targetFieldIDLetter = field.id[0]
-            const startFieldIDNumber = Number(this.currentPosition[1])
-            const targetFieldIDNumber = Number(field.id[1])
-            if (field.textContent !== ''
-                && field.id !== this.currentPosition
-                && targetFieldIDLetter === startFieldIDLetter){
-                this.stopFieldsY_Axis.push(field)
-                this.stopFieldsY_Axis_IDNumbers.push(targetFieldIDNumber)
-            }
-            if ( startFieldIDLetter === targetFieldIDLetter || startFieldIDNumber === targetFieldIDNumber ) {
-                this.validFields.push(field)
-            }
-        }
-        const lowestFieldsY_Axis_IDNumber = Math.min(...this.stopFieldsY_Axis_IDNumbers)
-        const stopFieldDown = this.stopFieldsY_Axis.find(field => Number(field.id[1]) === lowestFieldsY_Axis_IDNumber)
-
-        for (let field of this.validFields){
-            const targetFieldIDLetter = field.id[0]
-            const targetFieldIDNumber = Number(field.id[1])
-            if (targetFieldIDLetter === startFieldIDLetter
-                && stopFieldDown.id[1] > targetFieldIDNumber){
-                this.validFields = this.validFields.filter(e => e === field )
-            }
+    // First we scan if the king can escape from check to another field
+    //const intersection = !attackingPiece.validFields.some( field => kingPiece.validFields.includes(field) )
+    //console.log('intersection' + intersection)
+    attackingPiece.getValidFields()
+    for (let field of kingPiece.validFields){
+        if ( attackingPiece.validFields.includes(field) === false){
+            return false
         }
     }
 
-    getValidTargets(){
-        this.validTargets = []
+    // Second we scan if a defending Piece can throw itself between the King and the Attacker
+    for (let defendingPiece of defendingPieces){
+        defendingPiece.getValidFields()
+        for (let field of defendingPiece.validFields){
+            field.textContent = 'f'
+        }
     }
+    attackingPiece.getValidFields()
+    if ( attackingPiece.validTargets.includes(kingField) ) {
+        console.log('checkmate confirmed')
+        return true
+    }
+    for (let field of fields){
+        if (field.textContent === 'f'){
+            field.textContent = ''
+        }
+    }
+}
+
+
+function highlightCheck(){
+    console.log('highlited check')
 }
 */

@@ -11,7 +11,13 @@
     <body>
         <h1>Chess</h1>
         <h2 id="current-team-display">Turn:</h2>
-        <span id="heaven-black">Black Heaven: </span>
+        <span id="heaven-black">
+            <span id="pawns-black"></span>
+            <span id="rooks-black"></span>
+            <span id="knights-black"></span>
+            <span id="bishops-black"></span>
+            <span id="queen-black"></span>
+        </span>
         <table>
             <tr tabindex="0">
                 <td tabindex="0" id="a8"></td>
@@ -94,7 +100,13 @@
                 <td tabindex="0" id="h1"></td>
             </tr>
         </table>
-        <span id="heaven-white">White Heaven: </span>
+        <span id="heaven-white">
+            <span id="pawns-white"></span>
+            <span id="rooks-white"></span>
+            <span id="knights-white"></span>
+            <span id="bishops-white"></span>
+            <span id="queen-white"></span>
+        </span>
     </body>
     <script src="chess.js"></script>
 </html>

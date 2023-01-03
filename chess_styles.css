@@ -42,6 +42,10 @@ td {
     border: 4px solid darkred;
 }
 
+.promotion-field{
+    border: 4px solid purple;
+}
+
 .blink {
     animation-name: animation_blink;
     animation-timing-function: ease-in;
