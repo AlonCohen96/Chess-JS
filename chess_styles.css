@@ -1,17 +1,56 @@
 body {
-    font-family: 'Roboto', sans-serif;
+    font-family: 'Arvo', serif;
+    background: #fefae0;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    width: auto;
+    min-width: 70vh;
+    height: 6rem;
+    padding: 4vh 0 4vh;
+    background: #283618;
+    text-align: center;
+    font-size: 5rem;
+    color: #E9C46A;
+}
+
+h2 {
+    color: #E9C46A;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+#heaven-black, #heaven-white {
+    height: 5vh;
+    font-size: 4vh;
+    margin: auto;
+    text-align: center;
+}
+
+#pawns-white, #rooks-white, #knights-white, #bishops-white, #queen-white,
+#pawns-black, #rooks-black, #knights-black, #bishops-black, #queen-black{
+    display: inline-block;
+    margin: 0;
+    width: max-content;
 }
 
 table {
+    margin: auto;
+    width: 70vh;
+    height: 70vh;
     border-collapse: collapse;
+    border: 3vh solid #693f09;
+    background: whitesmoke;
 }
 
 td {
-    border: 1px solid black;
-    width: 50px;
-    height: 50px;
-    font-size: 2.2em;
+    width: 8.375vh;
+    height: 8.375vh;
+    font-size: 6vh;
     text-align: center;
+    background: #fefae0;
 }
 
 #a1, #a3, #a5, #a7,
@@ -22,15 +61,11 @@ td {
 #f2, #f4, #f6, #f8,
 #g1, #g3, #g5, #g7,
 #h2, #h4, #h6, #h8{
-    background: #C19A6B;
-}
-
-#heaven-black, #heaven-white {
-    font-size: 2em;
+    background: #E9C46A;
 }
 
 .hover {
-    font-weight: bold;
+    text-shadow: 1px 1px 2px black;
     cursor: pointer;
 }
 
@@ -57,5 +92,18 @@ td {
     0% { color: rgba(0,0,0) }
     50% { color: rgba(0,0,0, 0.2) }
     100% { color: rgba(0,0,0) }
-
 }
+
+#announce-winner {
+    display: none;
+    position: fixed;
+    inset: 0 0 0 0;
+    margin: auto;
+    height: 420px;
+    width: 350px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 6px 2px #666;
+    background-color: #212529;
+    color: whitesmoke;
+}
+
