@@ -70,15 +70,15 @@ td {
 }
 
 .valid-fields {
-    border: 4px solid lightgreen;
+    border: 0.4vh solid lightgreen;
 }
 
 .valid-targets{
-    border: 4px solid darkred;
+    border: 0.4vh solid darkred;
 }
 
 .promotion-field{
-    border: 4px solid purple;
+    border: 0.4vh solid purple;
 }
 
 .blink {
