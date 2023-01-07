@@ -1,12 +1,11 @@
 // Code by Alon Cohen
 //-to-do:
-// instead of bold when hovered, do a text-shadow or smth
 // instead of border around valid fields, make background color effect change or smth
 // Rochade
 // checkmate check
+// add sound
+// refactor highlight and removehighlight into 2 functions
 // additional game modes: trojan horse, spartan battle, battle royale, boss fight?
-// touchscreen
-// Design
 
 function startNewGame() {
     function pickField(event) {
@@ -53,7 +52,6 @@ function startNewGame() {
         chosenPiece.render()
         if ( checkGameOver() ) { return }
         switchCurrentTeam()
-        //renderInfo(currentTeamDisplay, `${currentTeam} team, your turn!`)
         removeMoveEventListeners()
         addPickFieldEventListeners()
         removeVisualEventListeners()
@@ -122,6 +120,12 @@ function startNewGame() {
         for (let field of fields){
             field.textContent = ''
         }
+        for (let subHeaven of document.getElementById('heaven-white').children){
+            subHeaven.textContent = ''
+        }
+        for (let subHeaven of document.getElementById('heaven-black').children){
+            subHeaven.textContent = ''
+        }
         removePickFieldEventListeners()
         removeMoveEventListeners()
         removeVisualEventListeners()
@@ -148,7 +152,6 @@ function startNewGame() {
         chosenPiece.emptyOldField()
         spawn(event).render()
         switchCurrentTeam()
-        //renderInfo(currentTeamDisplay, `${currentTeam} team, your turn!`)
         pieces = pieces.filter(victim => victim !== chosenPiece)
         removePromoteEventListeners()
         removeHighlightPromotionOptions()
@@ -242,7 +245,6 @@ function startNewGame() {
         event.target.classList.toggle('hover')
     }
 
-
     function highlightValidFields(){
         for (let field of chosenPiece.validFields){
             field.classList.add('valid-fields')
@@ -322,12 +324,18 @@ function startNewGame() {
 
     function announceWinner(winnerTeam){
         const announcementWindow = document.getElementById('announce-winner')
-        const winMessage = `Congratulations ${winnerTeam}, you won!`
+        const winMessage = `Congratulations ${winnerTeam} Team, you've won!\n🏆`
+        const confetti = document.getElementById('confetti')
+        console.log(confetti)
+
         renderInfo(announcementWindow,winMessage)
-        announcementWindow.style.display = 'block'
+        announcementWindow.style.display = 'flex'
+        confetti.style.display = 'flex'
         setTimeout(function(){
-            announcementWindow.style.display = 'none';
-        }, 3000);
+            announcementWindow.style.display = 'none'
+            confetti.style.display = 'none'
+
+        }, 5000);
     }
 
     function renderInfo(node, content){
@@ -367,16 +375,8 @@ function startNewGame() {
                 for (let i = 1; i <= 2; i++) {
                     const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] + i)
                     const targetField = fields.find(field => field.id === targetID)
-                    if (targetField) {
-                        if (targetField.textContent === '') {
-                            if (this.checkPromoteOption(targetField)){
-                                this.promotionFields.push(targetField)
-                            } else{
-                                this.validFields.push(targetField)
-                            }
-                        } else {
-                            break;
-                        }
+                    if (targetField && targetField.textContent === '') {
+                        this.validFields.push(targetField)
                     } else {
                         break;
                     }
@@ -417,7 +417,6 @@ function startNewGame() {
                 return true
             }
         }
-
     }
 
 
@@ -431,16 +430,8 @@ function startNewGame() {
                 for (let i = 1; i <= 2; i++) {
                     const targetID = Object.keys(field_coords).find(ID => field_coords[ID][0] === pieceCoords[0] && field_coords[ID][1] === pieceCoords[1] - i)
                     const targetField = fields.find(field => field.id === targetID)
-                    if (targetField) {
-                        if (targetField.textContent === '') {
-                            if (this.checkPromoteOption(targetField)){
-                                this.promotionFields.push(targetField)
-                            } else{
-                                this.validFields.push(targetField)
-                            }
-                        } else {
-                            break;
-                        }
+                    if (targetField && targetField.textContent === '') {
+                        this.validFields.push(targetField)
                     } else {
                         break;
                     }
@@ -978,9 +969,6 @@ function startNewGame() {
     // Declaring Piece later chosen by Player (at start undefined) and turn
     let chosenPiece
     let currentTeam = 'white'
-    const currentTeamDisplay = document.getElementById('current-team-display')
-
-    //renderInfo(currentTeamDisplay, `${currentTeam} team, your turn!`)
 
     // Setting Event Handlers
     addPickFieldEventListeners()
