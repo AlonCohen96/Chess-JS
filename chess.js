@@ -3,7 +3,10 @@
 // instead of border around valid fields, make background color effect change or smth
 // Rochade
 // checkmate check
+// only pieces with validfields or valid targets blink and hover
+// ad clickable link for react-native version
 // add sound
+// add min with to td in css
 // refactor highlight and removehighlight into 2 functions
 // additional game modes: trojan horse, spartan battle, battle royale, boss fight?
 
@@ -12,12 +15,17 @@ function startNewGame() {
         const field = event.target
         chosenPiece = pieces.find(piece => piece.currentPosition === field.id && piece.team === currentTeam)
         if (chosenPiece) {
-            removeHighlightValidFields()
+            removeCSS_class('valid-fields')
             chosenPiece.getValidFields()
+            if (chosenPiece.constructor.name === 'King') {
+                chosenPiece.avoidCheckFields()
+            } else {
+                chosenPiece.checkIfMovePutsOwnKingInCheck()
+            }
             highlightValidFields()
-            removeHighlightValidTargets()
+            removeCSS_class('valid-targets')
             highlightValidTargets()
-            removeHighlightPromotionField()
+            removeCSS_class('promotion-field')
             highlightPromotionField()
             removeHighlightCurrentTeam()
             removePickFieldEventListeners()
@@ -46,20 +54,60 @@ function startNewGame() {
         }
     }
 
-    function land(event){
+    function land(event) {
         chosenPiece.emptyOldField()
         chosenPiece.currentPosition = event.target.id
         chosenPiece.render()
-        if ( checkGameOver() ) { return }
+        removeCSS_class('check')
+        for (let piece of pieces) {
+            if (piece.scanForCheck()) {
+                if (scanForCheckMate()) {
+                    announceWinner(currentTeam)
+                    emptyBoard()
+                    startNewGame()
+                } else {
+                    highlightCheckField()
+                }
+            }
+        }
         switchCurrentTeam()
         removeMoveEventListeners()
         addPickFieldEventListeners()
         removeVisualEventListeners()
         addVisualEventListeners()
-        removeHighlightValidFields()
-        removeHighlightValidTargets()
-        removeHighlightPromotionField()
+        removeCSS_class('valid-fields')
+        removeCSS_class('valid-targets')
+        removeCSS_class('promotion-field')
         highlightCurrentTeam()
+    }
+
+    function highlightCheckField(){
+        const enemyKingPiece = pieces.find(piece => piece.constructor.name === 'King' && piece.team !== chosenPiece.team)
+        const enemyKingField = fields.find(field => field.id === enemyKingPiece.currentPosition)
+        enemyKingField.classList.add('check')
+    }
+
+    function removeCSS_class(CSS_class){
+        for (let field of fields){
+            field.classList.remove(CSS_class)
+        }
+    }
+
+    function scanForCheckMate(){
+        const defendingPieces = pieces.filter(piece => piece.team !== chosenPiece.team)
+        for (let piece of defendingPieces){
+            piece.getValidFields()
+            if (piece.constructor.name === 'King') {
+                piece.avoidCheckFields()
+            } else {
+                piece.checkIfMovePutsOwnKingInCheck()
+            }
+            if ( piece.validTargets.length > 0 || piece.validFields.length > 0){
+                console.log('checkmate can be avoided')
+                return false
+            }
+        }
+        return true
     }
 
     function kill(victim){
@@ -85,7 +133,6 @@ function startNewGame() {
         pieces = pieces.filter(victim => victim.currentPosition !== heavenID)
     }
 
-
     function renderPieceToHeaven(ID, victim){
         document.getElementById(ID).textContent += victim.pieceUnicode
     }
@@ -97,22 +144,6 @@ function startNewGame() {
         }
         for (let piece of pieces){
             piece.turn = !piece.turn
-        }
-    }
-
-
-    function checkGameOver(){
-        if (!pieces.includes(king_white) ){
-            announceWinner('Black')
-            emptyBoard()
-            startNewGame()
-            return true
-        }
-        if (!pieces.includes(king_black) ){
-            announceWinner('White')
-            emptyBoard()
-            startNewGame()
-            return true
         }
     }
 
@@ -130,9 +161,9 @@ function startNewGame() {
         removeMoveEventListeners()
         removeVisualEventListeners()
         removePromoteEventListeners()
-        removeHighlightValidFields()
-        removeHighlightValidTargets()
-        removeHighlightPromotionOptions()
+        removeCSS_class('valid-fields')
+        removeCSS_class('valid-targets')
+        removeCSS_class('promotion-field')
     }
 
     function landOnPromotionField(event){
@@ -141,9 +172,9 @@ function startNewGame() {
         chosenPiece.render()
         removeMoveEventListeners()
         removeVisualEventListeners()
-        removeHighlightValidFields()
-        removeHighlightValidTargets()
-        removeHighlightPromotionField()
+        removeCSS_class('valid-fields')
+        removeCSS_class('valid-targets')
+        removeCSS_class('promotion-field')
         highlightPromotionOptions()
         addPromoteEventListeners()
     }
@@ -151,6 +182,18 @@ function startNewGame() {
     function promote(event){
         chosenPiece.emptyOldField()
         spawn(event).render()
+        removeCSS_class('check')
+        for (let piece of pieces) {
+            if (piece.scanForCheck()) {
+                if (scanForCheckMate()) {
+                    announceWinner(currentTeam)
+                    emptyBoard()
+                    startNewGame()
+                } else {
+                    highlightCheckField()
+                }
+            }
+        }
         switchCurrentTeam()
         pieces = pieces.filter(victim => victim !== chosenPiece)
         removePromoteEventListeners()
@@ -251,18 +294,6 @@ function startNewGame() {
         }
     }
 
-    function removeHighlightValidFields(){
-        for (let field of fields){
-            field.classList.remove('valid-fields')
-        }
-    }
-
-    function removeHighlightValidTargets(){
-        for (let field of fields){
-            field.classList.remove('valid-targets')
-        }
-    }
-
     function highlightValidTargets(){
         for (let field of chosenPiece.validTargets){
             field.classList.add('valid-targets')
@@ -272,12 +303,6 @@ function startNewGame() {
     function highlightPromotionField(){
         for (let field of chosenPiece.promotionFields){
             field.classList.add('promotion-field')
-        }
-    }
-
-    function removeHighlightPromotionField(){
-        for (let field of fields){
-            field.classList.remove('promotion-field')
         }
     }
 
@@ -324,7 +349,7 @@ function startNewGame() {
 
     function announceWinner(winnerTeam){
         const announcementWindow = document.getElementById('announce-winner')
-        const winMessage = `Congratulations ${winnerTeam} Team, you've won!\n🏆`
+        const winMessage = `Congratulations ${winnerTeam} Team, you've won! 🏆`
         const confetti = document.getElementById('confetti')
         console.log(confetti)
 
@@ -332,10 +357,10 @@ function startNewGame() {
         announcementWindow.style.display = 'flex'
         confetti.style.display = 'flex'
         setTimeout(function(){
-            announcementWindow.style.display = 'none'
             confetti.style.display = 'none'
-
         }, 5000);
+        //announcementWindow.style.display = 'none'
+        // to-do: add new game? button to the window
     }
 
     function renderInfo(node, content){
@@ -360,6 +385,45 @@ function startNewGame() {
 
         emptyOldField(){
             document.getElementById(this.currentPosition).textContent = ''
+        }
+
+        scanForCheck(){
+            this.validTargets = []
+            this.getValidFields()
+            const enemyKingPiece = pieces.find(piece => piece.constructor.name === 'King' && piece.team !== this.team)
+            for (let field of this.validTargets){
+                if ( enemyKingPiece.currentPosition === field.id) {
+                    console.log(`${enemyKingPiece.team} King is in check!`)
+                    return true
+                }
+            }
+        }
+
+        checkIfMovePutsOwnKingInCheck(){
+            const enemyPieces = pieces.filter(piece => piece.team !== this.team)
+            const ownField = fields.find(field => field.id === this.currentPosition)
+            const kingPiece = pieces.find(piece => piece.team === this.team && piece.constructor.name === 'King')
+            const kingField = fields.find(field => field.id === kingPiece.currentPosition)
+            ownField.textContent = ''
+            for (let piece of enemyPieces){
+                piece.getValidFields()
+                if ( piece.validTargets.includes(kingField) ){
+                    const newValidFields = []
+                    for (let field of this.validFields){
+                        field.textContent = 'f'
+                        piece.getValidFields()
+                        if ( !piece.validTargets.includes(kingField) ) {
+                            newValidFields.push(field)
+                        }
+                        field.textContent = ''
+                    }
+                    this.validFields = newValidFields
+                    const pieceField = fields.find(field => field.id === piece.currentPosition)
+                    this.validTargets = this.validTargets.filter(field => field === pieceField)
+                    ownField.textContent = this.pieceUnicode
+                }
+            }
+            ownField.textContent = this.pieceUnicode
         }
     }
 
@@ -872,6 +936,61 @@ function startNewGame() {
                 }
             }
         }
+
+        avoidCheckFields () {
+            // First for all pieces except Pawns because those are annoying to deal with
+            const enemyPieces = pieces.filter(piece => piece.team !== this.team && piece.constructor.name !== 'BlackPawn' && piece.constructor.name !== 'WhitePawn' )
+            const kingField = fields.find(field => field.id === this.currentPosition)
+            kingField.textContent = ''
+            let allValidFields = []
+            for (let piece of enemyPieces) {
+                piece.getValidFields()
+                allValidFields.push(...piece.validFields)
+            }
+            this.validFields = this.validFields.filter(field => !allValidFields.includes(field) )
+            kingField.textContent = this.pieceUnicode
+
+            // Now we deal with the Pawn logic
+            if (this.team === 'black') {
+                const enemyPawns = pieces.filter(piece => piece.team !== this.team && piece.constructor.name === 'WhitePawn')
+                let pawnTargetFields = []
+                for (let pawn of enemyPawns) {
+                    const pawnCoords = field_coords[pawn.currentPosition]
+                    const targetIDs = Object.keys(field_coords).filter(ID => (field_coords[ID][0] === pawnCoords[0] + 1 && field_coords[ID][1] === pawnCoords[1] + 1)
+                                                                              || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] + 1)
+
+                    pawnTargetFields.push(...fields.filter(field => targetIDs.includes(field.id)))
+                }
+                this.validFields = this.validFields.filter(field => !pawnTargetFields.includes(field) )
+                this.validTargets = this.validTargets.filter(field => !pawnTargetFields.includes(field) )
+            }
+            if (this.team === 'white') {
+                const enemyPawns = pieces.filter(piece => piece.team !== this.team && piece.constructor.name === 'BlackPawn')
+                let pawnTargetFields = []
+                for (let pawn of enemyPawns) {
+                    const pawnCoords = field_coords[pawn.currentPosition]
+                    const targetIDs = Object.keys(field_coords).filter(ID => (field_coords[ID][0] === pawnCoords[0] + 1 && field_coords[ID][1] === pawnCoords[1] - 1)
+                                                                              || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] - 1)
+
+                    pawnTargetFields.push( ...fields.filter( field => targetIDs.includes(field.id) ) )
+                }
+                this.validFields = this.validFields.filter( field => !pawnTargetFields.includes(field) )
+                this.validTargets = this.validTargets.filter(field => !pawnTargetFields.includes(field) )
+            }
+
+            // Now we avoid targets that will put the King in check if he captures them
+            for (let targetField of this.validTargets){
+                const pieceUnicode = targetField.textContent
+                targetField.textContent = ''
+                for (let piece of enemyPieces){
+                    piece.getValidFields()
+                    if (piece.validFields.includes(targetField)) {
+                        this.validTargets = this.validTargets.filter( field => field !== targetField)
+                    }
+                }
+                targetField.textContent = pieceUnicode
+            }
+        }
     }
 
 
@@ -921,24 +1040,23 @@ function startNewGame() {
     const king_black = new King('black', false, 'e8', '♚')
 
     let pieces = []
-    pieces.push(pawn1_white, pawn2_white, pawn3_white, pawn4_white, pawn5_white, pawn6_white, pawn7_white, pawn8_white,
+    pieces.push(/*pawn1_white, pawn2_white, pawn3_white, pawn4_white, pawn5_white, pawn6_white, pawn7_white,*/ pawn8_white,
         rook1_white, rook2_white,
         knight1_white, knight2_white,
         bishop1_white, bishop2_white,
         queen_white,
-        king_white,
-        pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
+        king_white
+        /*pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
         rook1_black, rook2_black,
         knight1_black, knight2_black,
         bishop1_black, bishop2_black,
-        queen_black,
+        queen_black*/,
         king_black)
 
     //Rendering pieces on the board
     for (let piece of pieces) {
         piece.render()
     }
-
 
     // Setting the fields
     const field_IDs = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8',
@@ -978,61 +1096,3 @@ function startNewGame() {
 
 window.addEventListener('load', startNewGame)
 
-
-
-/*
-function scanForCheck(kingPiece, kingField){
-    const attackingPieces = pieces.filter(piece => piece.team === chosenPiece.team)
-    for (let attackingPiece of attackingPieces){
-        attackingPiece.getValidFields()
-        if (attackingPiece.validTargets.includes(kingField)) {
-            switch ( scanForCheckmate(kingPiece,kingField,attackingPiece) ){
-                //if returns true call gameOver()
-                case true : console.log('game over'); return; break;
-                case false: console.log('check but not checkmate'); break;
-            }
-            highlightCheck()
-            //break; maybe this is needed
-        }
-    }
-}
-
-
-function scanForCheckmate(kingPiece, kingField, attackingPiece){
-    console.log('checking for checkmate')
-    const defendingPieces = pieces.filter(piece => piece.team !== chosenPiece.team)
-
-    // First we scan if the king can escape from check to another field
-    //const intersection = !attackingPiece.validFields.some( field => kingPiece.validFields.includes(field) )
-    //console.log('intersection' + intersection)
-    attackingPiece.getValidFields()
-    for (let field of kingPiece.validFields){
-        if ( attackingPiece.validFields.includes(field) === false){
-            return false
-        }
-    }
-
-    // Second we scan if a defending Piece can throw itself between the King and the Attacker
-    for (let defendingPiece of defendingPieces){
-        defendingPiece.getValidFields()
-        for (let field of defendingPiece.validFields){
-            field.textContent = 'f'
-        }
-    }
-    attackingPiece.getValidFields()
-    if ( attackingPiece.validTargets.includes(kingField) ) {
-        console.log('checkmate confirmed')
-        return true
-    }
-    for (let field of fields){
-        if (field.textContent === 'f'){
-            field.textContent = ''
-        }
-    }
-}
-
-
-function highlightCheck(){
-    console.log('highlited check')
-}
-*/

@@ -81,6 +81,10 @@ td {
     border: 0.4vh solid purple;
 }
 
+.check{
+    background: #ff6d00 !important;
+}
+
 .blink {
     animation-name: animation_blink;
     animation-timing-function: ease-in;
@@ -99,18 +103,19 @@ td {
     justify-content: center;
     align-items: center;
     position: fixed;
-    inset: 0 0 0 0;
+    inset: 0 0 80vh 0;
     margin: auto;
-    height: 50vh;
-    width: 50vh;
-    border-radius: 3vh;
+    height: 15vh;
+    width: 70vh;
+    border-radius: 1.5vh;
     box-shadow: 0px 0px 6px 2px #666;
-    border: 3vh solid #eeba0b;
+    border: 1.5vh solid #eeba0b;
     background-color: #fefae0;
     color: #283618;
     text-transform: capitalize;
     text-align: center;
-    font-size: 6vh;
+    vertical-align: middle;
+    font-size: 4vh;
     white-space: pre-line;
 }
 
@@ -267,7 +272,7 @@ td {
     margin: 0 0.2rem;
     animation-name: confetti;
     animation-timing-function: linear;
-    animation-iteration-count: infinite;
+    animation-iteration-count: 2;
     animation-duration: calc(60s / var(--speed));
 }
 
