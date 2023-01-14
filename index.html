@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="chess_styles.css">
-        <link rel="icon" href="knight-icon.png">
+        <link rel="icon" href="dependencies/knight-icon.png">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Arvo&display=swap" rel="stylesheet">
@@ -108,7 +108,14 @@
             <span id="bishops-white"></span>
             <span id="queen-white"></span>
         </div>
-        <div id="announce-winner"> Congratulations White Team, you've won!</div>
+        <div id="announce-winner">
+            <div id="win-message"></div>
+            <button class="rematch-btn" type="button">Rematch</button>
+        </div>
+        <div id="announce-stalemate">
+            <div id="stalemate-message"></div>
+            <button class="rematch-btn" type="button">Rematch</button>
+        </div>
         <div class="confetti-container">
             <div class="confetti" id="confetti">
                 <i style="--speed: 10; --bg: yellow" class="square"></i>

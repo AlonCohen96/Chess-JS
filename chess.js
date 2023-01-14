@@ -2,12 +2,8 @@
 //-to-do:
 // instead of border around valid fields, make background color effect change or smth
 // Rochade
-// checkmate check
 // only pieces with validfields or valid targets blink and hover
 // ad clickable link for react-native version
-// add sound
-// add min with to td in css
-// refactor highlight and removehighlight into 2 functions
 // additional game modes: trojan horse, spartan battle, battle royale, boss fight?
 
 function startNewGame() {
@@ -42,11 +38,14 @@ function startNewGame() {
                 kill(victim)
             }
             landOnPromotionField(event)
+            audioPieceMove.play()
         } else if (chosenPiece.validTargets.includes(targetField)){
             kill(victim)
             land(event)
+            audioPieceKill.play()
         } else if (chosenPiece.validFields.includes(targetField)) {
             land(event)
+            audioPieceMove.play()
         } else {
             if (victim && victim.team === chosenPiece.team) {
                 pickField(event)
@@ -59,14 +58,67 @@ function startNewGame() {
         chosenPiece.currentPosition = event.target.id
         chosenPiece.render()
         removeCSS_class('check')
+
+        if (scanForNoLegalMovesLeft()){
+            for (let piece of pieces){
+                if (piece.scanForCheck() ) {
+                    // Checkmate
+                    checkmate = true
+                    highlightCheckField()
+                    audioGameOver.play()
+                    announceWinner(currentTeam)
+                    break;
+                }
+            }
+            if (!checkmate) {
+                // Stalemate
+                audioGameOver.play()
+                announceStalemate()
+            }
+        } else {
+            for (let piece of pieces){
+                if (piece.scanForCheck() ) {
+                    // Check
+                    highlightCheckField()
+                }
+            }
+        }
+
+        switchCurrentTeam()
+        removeMoveEventListeners()
+        addPickFieldEventListeners()
+        removeVisualEventListeners()
+        addVisualEventListeners()
+        removeCSS_class('valid-fields')
+        removeCSS_class('valid-targets')
+        removeCSS_class('promotion-field')
+        highlightCurrentTeam()
+    }
+
+    /*
+    function land(event) {
+        chosenPiece.emptyOldField()
+        chosenPiece.currentPosition = event.target.id
+        chosenPiece.render()
+        removeCSS_class('check')
         for (let piece of pieces) {
             if (piece.scanForCheck()) {
-                if (scanForCheckMate()) {
-                    announceWinner(currentTeam)
-                    emptyBoard()
-                    startNewGame()
-                } else {
+                if (scanForNoLegalMovesLeft()) {
+                    // Checkmate
                     highlightCheckField()
+                    removeCSS_class('valid-fields')
+                    removeCSS_class('valid-targets')
+                    audioCheckMate.play()
+                    announceWinner(currentTeam)
+                    break;
+                } else {
+                    // Check
+                    highlightCheckField()
+                }
+            } else {
+                if (scanForNoLegalMovesLeft()){
+                    // Stalemate
+                    announceStalemate()
                 }
             }
         }
@@ -79,7 +131,7 @@ function startNewGame() {
         removeCSS_class('valid-targets')
         removeCSS_class('promotion-field')
         highlightCurrentTeam()
-    }
+    }*/
 
     function highlightCheckField(){
         const enemyKingPiece = pieces.find(piece => piece.constructor.name === 'King' && piece.team !== chosenPiece.team)
@@ -93,7 +145,7 @@ function startNewGame() {
         }
     }
 
-    function scanForCheckMate(){
+    function scanForNoLegalMovesLeft(){
         const defendingPieces = pieces.filter(piece => piece.team !== chosenPiece.team)
         for (let piece of defendingPieces){
             piece.getValidFields()
@@ -103,10 +155,11 @@ function startNewGame() {
                 piece.checkIfMovePutsOwnKingInCheck()
             }
             if ( piece.validTargets.length > 0 || piece.validFields.length > 0){
-                console.log('checkmate can be avoided')
+                console.log('legal moves left')
                 return false
             }
         }
+        console.log('no legal moves left. game over')
         return true
     }
 
@@ -164,6 +217,7 @@ function startNewGame() {
         removeCSS_class('valid-fields')
         removeCSS_class('valid-targets')
         removeCSS_class('promotion-field')
+        removeCSS_class('check')
     }
 
     function landOnPromotionField(event){
@@ -183,17 +237,32 @@ function startNewGame() {
         chosenPiece.emptyOldField()
         spawn(event).render()
         removeCSS_class('check')
-        for (let piece of pieces) {
-            if (piece.scanForCheck()) {
-                if (scanForCheckMate()) {
+
+        if (scanForNoLegalMovesLeft()){
+            for (let piece of pieces){
+                if (piece.scanForCheck() ) {
+                    // Checkmate
+                    checkmate = true
+                    highlightCheckField()
+                    audioGameOver.play()
                     announceWinner(currentTeam)
-                    emptyBoard()
-                    startNewGame()
-                } else {
+                    break;
+                }
+            }
+            if (!checkmate) {
+                // Stalemate
+                audioGameOver.play()
+                announceStalemate()
+            }
+        } else {
+            for (let piece of pieces){
+                if (piece.scanForCheck() ) {
+                    // Check
                     highlightCheckField()
                 }
             }
         }
+
         switchCurrentTeam()
         pieces = pieces.filter(victim => victim !== chosenPiece)
         removePromoteEventListeners()
@@ -348,25 +417,37 @@ function startNewGame() {
     }
 
     function announceWinner(winnerTeam){
+        document.getElementById('win-message').textContent = `Congratulations ${winnerTeam} Team, you've won! 🏆`
         const announcementWindow = document.getElementById('announce-winner')
-        const winMessage = `Congratulations ${winnerTeam} Team, you've won! 🏆`
         const confetti = document.getElementById('confetti')
-        console.log(confetti)
 
-        renderInfo(announcementWindow,winMessage)
         announcementWindow.style.display = 'flex'
         confetti.style.display = 'flex'
         setTimeout(function(){
             confetti.style.display = 'none'
         }, 5000);
-        //announcementWindow.style.display = 'none'
-        // to-do: add new game? button to the window
+
+        const rematchBtn = document.getElementsByClassName('rematch-btn')[0]
+        rematchBtn.addEventListener('click', () => {
+            announcementWindow.style.display = 'none'
+            emptyBoard()
+            startNewGame()
+        })
     }
 
-    function renderInfo(node, content){
-        document.getElementById(node.id).textContent = content
-    }
+    function announceStalemate(){
+        const kingPiece = pieces.find(piece => piece.constructor.name === 'King' && piece.team !== currentTeam)
+        document.getElementById('stalemate-message').textContent = `Stalemate! ${kingPiece.team} King is not in check but there are no legal moves left.`
+        const announcementWindow = document.getElementById('announce-stalemate')
+        announcementWindow.style.display = 'flex'
 
+        const rematchBtn = document.getElementsByClassName('rematch-btn')[1]
+        rematchBtn.addEventListener('click', () => {
+            announcementWindow.style.display = 'none'
+            emptyBoard()
+            startNewGame()
+        })
+    }
 
     class Pawn {
         constructor(team, turn, currentPosition, pieceUnicode) {
@@ -979,6 +1060,7 @@ function startNewGame() {
             }
 
             // Now we avoid targets that will put the King in check if he captures them
+            kingField.textContent = ''
             for (let targetField of this.validTargets){
                 const pieceUnicode = targetField.textContent
                 targetField.textContent = ''
@@ -990,6 +1072,7 @@ function startNewGame() {
                 }
                 targetField.textContent = pieceUnicode
             }
+            kingField.textContent = this.pieceUnicode
         }
     }
 
@@ -1084,9 +1167,16 @@ function startNewGame() {
         fields.push(document.getElementById(field_ID))
     }
 
-    // Declaring Piece later chosen by Player (at start undefined) and turn
+    // Declaring Piece later chosen by Player (default undefined), current Team, and checkmate status
     let chosenPiece
     let currentTeam = 'white'
+    let checkmate = false
+
+    // Loading Audio files
+    const audioPieceMove = new Audio('dependencies/piece_move.wav')
+    const audioPieceKill = new Audio('dependencies/piece_kill.wav')
+    const audioGameOver = new Audio('dependencies/game_over.wav')
+
 
     // Setting Event Handlers
     addPickFieldEventListeners()

@@ -6,20 +6,14 @@ body {
 }
 
 header {
-    width: auto;
-    min-width: 70vh;
+    width: 100%;
+    min-width: 75vh;
     height: 6rem;
     padding: 4vh 0 4vh;
     background: #283618;
     text-align: center;
     font-size: 5rem;
     color: #E9C46A;
-}
-
-h2 {
-    color: #E9C46A;
-    text-align: center;
-    text-transform: capitalize;
 }
 
 #heaven-black, #heaven-white {
@@ -38,8 +32,9 @@ h2 {
 
 table {
     margin: auto;
-    width: 70vh;
-    height: 70vh;
+    width: 67vh;
+    height: 67vh;
+    table-layout: fixed;
     border-collapse: collapse;
     border: 3vh solid #693f09;
     background: whitesmoke;
@@ -98,25 +93,42 @@ td {
     100% { color: rgba(0,0,0) }
 }
 
-#announce-winner {
+#announce-winner, #announce-stalemate {
     display: none;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     position: fixed;
-    inset: 0 0 80vh 0;
+    inset: 0 0 80% 0;
     margin: auto;
     height: 15vh;
-    width: 70vh;
+    width: 67vh;
     border-radius: 1.5vh;
     box-shadow: 0px 0px 6px 2px #666;
     border: 1.5vh solid #eeba0b;
     background-color: #fefae0;
     color: #283618;
-    text-transform: capitalize;
     text-align: center;
-    vertical-align: middle;
-    font-size: 4vh;
+    text-transform: capitalize;
+    font-size: 3vh;
     white-space: pre-line;
+}
+
+#win-message, #stalemate-message{
+    margin: 2vh 0 1vh 0;
+}
+
+.rematch-btn{
+    margin: 0 0 1vh 0;
+    padding: 0.5vh 1vh 0.5vh 1vh;
+    font: inherit;
+    font-size: 2vh;
+    font-weight: bold;
+    color: #E9C46A;
+    background: #283618;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
 .confetti-container {
