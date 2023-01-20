@@ -1,10 +1,6 @@
 // Code by Alon Cohen
 //-to-do:
 // instead of border around valid fields, make background color effect change or smth
-// Rochade
-// only pieces with validfields or valid targets blink and hover
-// ad clickable link for react-native version
-// additional game modes: trojan horse, spartan battle, battle royale, boss fight?
 
 function startNewGame() {
     function pickField(event) {
@@ -172,10 +168,15 @@ function startNewGame() {
         for (let subHeaven of document.getElementById('heaven-black').children){
             subHeaven.textContent = ''
         }
+
         removePickFieldEventListeners()
         removeMoveEventListeners()
         removeVisualEventListeners()
         removePromoteEventListeners()
+        removeRematchEventListeners()
+        removeGameModeEventListeners()
+        removeHighlightCurrentTeam()
+        removeHighlightPromotionOptions()
         removeCSS_class('valid-fields')
         removeCSS_class('valid-targets')
         removeCSS_class('promotion-field')
@@ -316,6 +317,17 @@ function startNewGame() {
         event.target.classList.toggle('hover')
     }
 
+    function removeRematchEventListeners(){
+        document.getElementsByClassName('rematch-btn')[0].removeEventListener('click', rematch)
+        document.getElementsByClassName('rematch-btn')[0].removeEventListener('click', rematch)
+    }
+
+    function removeGameModeEventListeners(){
+        document.getElementById('classic-btn').removeEventListener('click', changeGameMode)
+        document.getElementById('sparta-btn').removeEventListener('click', changeGameMode)
+        document.getElementById('troy-btn').removeEventListener('click', changeGameMode)
+    }
+
     function highlightValidFields(){
         for (let field of chosenPiece.validFields){
             field.classList.add('valid-fields')
@@ -371,7 +383,7 @@ function startNewGame() {
     }
 
     function announceWinner(winnerTeam){
-        document.getElementById('win-message').textContent = `Congratulations ${winnerTeam} Team, you've won! 🏆`
+        document.getElementById('win-message').textContent = `Checkmate! Congratulations ${winnerTeam} Team, you've won! 🏆`
         const announcementWindow = document.getElementById('announce-winner')
         const confetti = document.getElementById('confetti')
 
@@ -382,11 +394,7 @@ function startNewGame() {
         }, 5000);
 
         const rematchBtn = document.getElementsByClassName('rematch-btn')[0]
-        rematchBtn.addEventListener('click', () => {
-            announcementWindow.style.display = 'none'
-            emptyBoard()
-            startNewGame()
-        })
+        rematchBtn.addEventListener('click', rematch)
     }
 
     function announceStalemate(){
@@ -396,11 +404,19 @@ function startNewGame() {
         announcementWindow.style.display = 'flex'
 
         const rematchBtn = document.getElementsByClassName('rematch-btn')[1]
-        rematchBtn.addEventListener('click', () => {
-            announcementWindow.style.display = 'none'
-            emptyBoard()
-            startNewGame()
-        })
+        rematchBtn.addEventListener('click', rematch)
+    }
+
+    function rematch(event){
+        event.target.parentElement.style.display = 'none'
+        emptyBoard()
+        startNewGame()
+    }
+
+    function changeGameMode(event){
+        currentGameMode = event.target.id
+        emptyBoard()
+        startNewGame()
     }
 
     class Pawn {
@@ -511,8 +527,8 @@ function startNewGame() {
         }
 
         checkPromoteOption(targetField){
-             let heavenIsEmpty = true
-             for (let subHeaven of whiteHeaven){
+            let heavenIsEmpty = true
+            for (let subHeaven of whiteHeaven){
                 if (subHeaven.textContent !== ''){
                     heavenIsEmpty = false
                     break;
@@ -1014,7 +1030,7 @@ function startNewGame() {
                 for (let pawn of enemyPawns) {
                     const pawnCoords = field_coords[pawn.currentPosition]
                     const targetIDs = Object.keys(field_coords).filter(ID => (field_coords[ID][0] === pawnCoords[0] + 1 && field_coords[ID][1] === pawnCoords[1] + 1)
-                                                                              || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] + 1)
+                        || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] + 1)
 
                     pawnTargetFields.push(...fields.filter(field => targetIDs.includes(field.id)))
                 }
@@ -1027,7 +1043,7 @@ function startNewGame() {
                 for (let pawn of enemyPawns) {
                     const pawnCoords = field_coords[pawn.currentPosition]
                     const targetIDs = Object.keys(field_coords).filter(ID => (field_coords[ID][0] === pawnCoords[0] + 1 && field_coords[ID][1] === pawnCoords[1] - 1)
-                                                                              || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] - 1)
+                        || field_coords[ID][0] === pawnCoords[0] - 1 && field_coords[ID][1] === pawnCoords[1] - 1)
 
                     pawnTargetFields.push( ...fields.filter( field => targetIDs.includes(field.id) ) )
                 }
@@ -1052,65 +1068,142 @@ function startNewGame() {
         }
     }
 
+    let pieces
 
     // Creating pieces
-    const pawn1_white = new WhitePawn('white', true, 'a2', '♙')
-    const pawn2_white = new WhitePawn('white', true, 'b2', '♙')
-    const pawn3_white = new WhitePawn('white', true, 'c2', '♙')
-    const pawn4_white = new WhitePawn('white', true, 'd2', '♙')
-    const pawn5_white = new WhitePawn('white', true, 'e2', '♙')
-    const pawn6_white = new WhitePawn('white', true, 'f2', '♙')
-    const pawn7_white = new WhitePawn('white', true, 'g2', '♙')
-    const pawn8_white = new WhitePawn('white', true, 'h2', '♙')
+    if (currentGameMode === 'classic-btn') {
+        pieces = [
+            /*new WhitePawn('white', true, 'a2', '♙'),
+            new WhitePawn('white', true, 'b2', '♙'),
+            new WhitePawn('white', true, 'c2', '♙'),
+            new WhitePawn('white', true, 'd2', '♙'),
+            new WhitePawn('white', true, 'e2', '♙'),
+            new WhitePawn('white', true, 'f2', '♙'),
+            new WhitePawn('white', true, 'g2', '♙'),*/
+            new WhitePawn('white', true, 'h2', '♙'),
+            new Rook('white', true, 'a1', '♖'),
+            new Rook('white', true, 'h1', '♖'),
 
-    const rook1_white = new Rook('white', true, 'a1', '♖')
-    const rook2_white = new Rook('white', true, 'h1', '♖')
+            new Knight('white', true, 'b1', '♘'),
+            new Knight('white', true, 'g1', '♘'),
 
-    const knight1_white = new Knight('white', true, 'b1', '♘')
-    const knight2_white = new Knight('white', true, 'g1', '♘')
+            new Bishop('white', true, 'c1', '♗'),
+            new Bishop('white', true, 'f1', '♗'),
 
-    const bishop1_white = new Bishop('white', true, 'c1', '♗')
-    const bishop2_white = new Bishop('white', true, 'f1', '♗')
+            new Queen('white', true, 'd1', '♕'),
+            new King('white', true, 'e1', '♔'),
 
-    const queen_white = new Queen('white', true, 'd1', '♕')
+            /*new BlackPawn('black', false, 'a7', '♟'),
+            new BlackPawn('black', false, 'b7', '♟'),
+            new BlackPawn('black', false, 'c7', '♟'),
+            new BlackPawn('black', false, 'd7', '♟'),
+            new BlackPawn('black', false, 'e7', '♟'),
+            new BlackPawn('black', false, 'f7', '♟'),
+            new BlackPawn('black', false, 'g7', '♟'),
+            new BlackPawn('black', false, 'h7', '♟'),
 
-    const king_white = new King('white', true, 'e1', '♔')
+            new Rook('black', false, 'a8', '♜'),
+            new Rook('black', false, 'h8', '♜'),
 
-    const pawn1_black = new BlackPawn('black', false, 'a7', '♟')
-    const pawn2_black = new BlackPawn('black', false, 'b7', '♟')
-    const pawn3_black = new BlackPawn('black', false, 'c7', '♟')
-    const pawn4_black = new BlackPawn('black', false, 'd7', '♟')
-    const pawn5_black = new BlackPawn('black', false, 'e7', '♟')
-    const pawn6_black = new BlackPawn('black', false, 'f7', '♟')
-    const pawn7_black = new BlackPawn('black', false, 'g7', '♟')
-    const pawn8_black = new BlackPawn('black', false, 'h7', '♟')
+            new Knight('black', false, 'b8', '♞'),
+            new Knight('black', false, 'g8', '♞'),
 
-    const rook1_black = new Rook('black', false, 'a8', '♜')
-    const rook2_black = new Rook('black', false, 'h8', '♜')
+            new Bishop('black', false, 'c8', '♝'),
+            new Bishop('black', false, 'f8', '♝'),
+            new Queen('black', false, 'd8', '♛'),*/
+            new King('black', false, 'e8', '♚')
+        ]
+    } else if (currentGameMode === 'sparta-btn') {
+        pieces = [
+            new Rook('white', true, 'a4', '♖'),
+            new Rook('white', true, 'b3', '♖'),
+            new Rook('white', true, 'c2', '♖'),
+            new Rook('white', true, 'd1', '♖'),
+            new Bishop('white', true, 'a3', '♗'),
+            new Bishop('white', true, 'b2', '♗'),
+            new Bishop('white', true, 'c1', '♗'),
+            new Queen('white', true, 'a2', '♕'),
+            new Queen('white', true, 'b1', '♕'),
+            new Queen('white', true, 'a1', '♕'),
+            new King('white', false, 'c3', '♔'),
+            new BlackPawn('black', false, 'b8', '♟'),
+            new BlackPawn('black', false, 'c7', '♟'),
+            new BlackPawn('black', false, 'd6', '♟'),
+            new BlackPawn('black', false, 'e5', '♟'),
+            new BlackPawn('black', false, 'f4', '♟'),
+            new BlackPawn('black', false, 'g3', '♟'),
+            new BlackPawn('black', false, 'h2', '♟'),
+            new BlackPawn('black', false, 'c8', '♟'),
+            new BlackPawn('black', false, 'd7', '♟'),
+            new BlackPawn('black', false, 'e6', '♟'),
+            new BlackPawn('black', false, 'f5', '♟'),
+            new BlackPawn('black', false, 'g4', '♟'),
+            new BlackPawn('black', false, 'h3', '♟'),
+            new BlackPawn('black', false, 'd8', '♟'),
+            new BlackPawn('black', false, 'f6', '♟'),
+            new BlackPawn('black', false, 'h4', '♟'),
+            new BlackPawn('black', false, 'f8', '♟'),
+            new BlackPawn('black', false, 'g7', '♟'),
+            new BlackPawn('black', false, 'h6', '♟'),
+            new Knight('black', false, 'e7', '♞'),
+            new Knight('black', false, 'g5', '♞'),
+            new Knight('black', false, 'f7', '♞'),
+            new Knight('black', false, 'g6', '♞'),
+            new Rook('black', false, 'e8', '♜'),
+            new Rook('black', false, 'h5', '♜'),
+            new Bishop('black', false, 'g8', '♝'),
+            new Bishop('black', false, 'h7', '♝'),
+            new King('black', false, 'h8', '♚')
+        ]
+    } else if (currentGameMode === 'troy-btn') {
+        pieces = [
+            new WhitePawn('white', true, 'e7', '♙'),
+            new WhitePawn('white', true, 'b2', '♙'),
+            new WhitePawn('white', true, 'c1', '♙'),
+            new WhitePawn('white', true, 'f2', '♙'),
+            new WhitePawn('white', true, 'g1', '♙'),
+            new WhitePawn('white', true, 'h1', '♙'),
+            new WhitePawn('white', true, 'd2', '♙'),
+            new WhitePawn('white', true, 'e2', '♙'),
+            new Rook('white', true, 'c2', '♖'),
+            new Rook('white', true, 'f1', '♖'),
+            new Rook('white', true, 'h2', '♖'),
+            new Bishop('white', true, 'a2', '♗'),
+            new Bishop('white', true, 'a1', '♗'),
+            new Bishop('white', true, 'b1', '♗'),
+            new Bishop('white', true, 'g2', '♗'),
+            new Knight('white', true, 'd8', '♘'),
+            new Knight('white', true, 'e8', '♘'),
+            new Knight('white', true, 'f8', '♘'),
+            new Knight('white', true, 'd7', '♘'),
+            new Knight('white', true, 'f7', '♘'),
+            new Knight('white', true, 'd6', '♘'),
+            new Knight('white', true, 'e6', '♘'),
+            new Knight('white', true, 'f6', '♘'),
+            new Queen('white', true, 'd1', '♕'),
+            new King('white', true, 'e1', '♔'),
+            new Rook('black', false, 'a4', '♜'),
+            new Rook('black', false, 'b4', '♜'),
+            new Rook('black', false, 'c4', '♜'),
+            new Rook('black', false, 'd4', '♜'),
+            new Rook('black', false, 'e4', '♜'),
+            new Rook('black', false, 'f4', '♜'),
+            new Rook('black', false, 'g4', '♜'),
+            new Rook('black', false, 'h4', '♜'),
+            new Rook('black', false, 'h5', '♜'),
+            new Rook('black', false, 'h6', '♜'),
+            new Rook('black', false, 'h7', '♜'),
+            new Rook('black', false, 'h8', '♜'),
+            new Rook('black', false, 'a6', '♜'),
+            new Rook('black', false, 'a5', '♜'),
+            new Queen('black', false, 'a7', '♛'),
+            new Queen('black', false, 'b7', '♛'),
+            new Queen('black', false, 'b8', '♛'),
+            new King('black', false, 'a8', '♚')
+        ]
+    }
 
-    const knight1_black = new Knight('black', false, 'b8', '♞')
-    const knight2_black = new Knight('black', false, 'g8', '♞')
-
-    const bishop1_black = new Bishop('black', false, 'c8', '♝')
-    const bishop2_black = new Bishop('black', false, 'f8', '♝')
-
-    const queen_black = new Queen('black', false, 'd8', '♛')
-
-    const king_black = new King('black', false, 'e8', '♚')
-
-    let pieces = []
-    pieces.push(/*pawn1_white, pawn2_white, pawn3_white, pawn4_white, pawn5_white, pawn6_white, pawn7_white,*/ pawn8_white,
-        rook1_white, rook2_white,
-        knight1_white, knight2_white,
-        bishop1_white, bishop2_white,
-        queen_white,
-        king_white,
-        /*pawn1_black, pawn2_black, pawn3_black, pawn4_black, pawn5_black, pawn6_black, pawn7_black, pawn8_black,
-        rook1_black, rook2_black,
-        knight1_black, knight2_black,
-        bishop1_black, bishop2_black,
-        queen_black,*/
-        king_black)
+    console.log(`New game of ${currentGameMode} started.`)
 
     //Rendering pieces on the board
     for (let piece of pieces) {
@@ -1119,13 +1212,13 @@ function startNewGame() {
 
     // Setting the fields
     const field_IDs = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7', 'a8',
-                       'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8',
-                       'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8',
-                       'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8',
-                       'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8',
-                       'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
-                       'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8',
-                       'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8']
+        'b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8',
+        'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7', 'c8',
+        'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8',
+        'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8',
+        'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8',
+        'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7', 'g8',
+        'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'h7', 'h8']
 
     const field_coords = {
         a1: [1, 1], a2: [1, 2], a3: [1, 3], a4: [1, 4], a5: [1, 5], a6: [1, 6], a7: [1, 7], a8: [1, 8],
@@ -1138,20 +1231,26 @@ function startNewGame() {
         h1: [8, 1], h2: [8, 2], h3: [8, 3], h4: [8, 4], h5: [8, 5], h6: [8, 6], h7: [8, 7], h8: [8, 8]
     }
 
+
     const fields = []
     for (let field_ID of field_IDs) {
         fields.push(document.getElementById(field_ID))
     }
 
     const whiteHeaven = [document.getElementById('rooks-white'),
-                         document.getElementById('knights-white'),
-                         document.getElementById('bishops-white'),
-                         document.getElementById('queen-white')]
+        document.getElementById('knights-white'),
+        document.getElementById('bishops-white'),
+        document.getElementById('queen-white')]
 
     const blackHeaven = [document.getElementById('rooks-black'),
-                         document.getElementById('knights-black'),
-                         document.getElementById('bishops-black'),
-                         document.getElementById('queen-black')]
+        document.getElementById('knights-black'),
+        document.getElementById('bishops-black'),
+        document.getElementById('queen-black')]
+
+    // Registering alternative game mode Button
+    document.getElementById('classic-btn').addEventListener('click', changeGameMode)
+    document.getElementById('sparta-btn').addEventListener('click', changeGameMode)
+    document.getElementById('troy-btn').addEventListener('click', changeGameMode)
 
 
     // Declaring Piece later chosen by Player (default undefined), current Team, and checkmate status
@@ -1172,3 +1271,4 @@ function startNewGame() {
 
 window.addEventListener('load', startNewGame)
 
+let currentGameMode = 'classic-btn'

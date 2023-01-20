@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Confetti effect by: https://blog.logrocket.com/how-create-confetti-effect-css/ -->
 <html lang="en">
     <head>
         <meta charset="UTF-8">
@@ -11,7 +12,13 @@
         <title>ChessJS</title>
     </head>
     <body>
-        <header>Chess.JS</header>
+        <header>
+            <div id="header-text" class="grid-item">Chess.JS</div>
+            <div id="gamemodes-text" class="grid-item">Experimental Game Modes</div>
+            <button id="classic-btn" class="grid-item" type="button">Classic</button>
+            <button id="sparta-btn" class="grid-item" type="button">300 Spartans</button>
+            <button id="troy-btn" class="grid-item" type="">Trojan Horse</button>
+        </header>
         <div id="heaven-black">
             <div id="pawns-black"></div>
             <div id="rooks-black"></div>
@@ -226,6 +233,9 @@
                 <i style="--speed: 15; --bg: cyan" class="square"></i>
             </div>
         </div>
+        <footer>
+            <p>©2023 Created by Alon Cohen. Check out the Code on my <a href="https://github.com/AlonCohen96/Chessify">GitHub</a>.</p>
+        </footer>
     </body>
-    <script src="chess.js"></script>
+    <script src="chess2.js"></script>
 </html>

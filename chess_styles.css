@@ -6,14 +6,84 @@ body {
 }
 
 header {
+    display: grid;
+    grid-template-columns: 33.333% 33.333% 33.333%;
+    grid-template-rows: auto 0 auto;
+    grid-template-areas:
+    "header-text header-text header-text"
+    ". gamemodes-text ."
+    "classic-btn sparta-btn troy-btn";
     width: 100%;
     min-width: 75vh;
-    height: 6rem;
-    padding: 4vh 0 4vh;
+    /*height: 6rem;*/
+    padding: 3vh 0 2vh;
     background: #283618;
     text-align: center;
-    font-size: 5rem;
+    font-size: 6rem;
     color: #E9C46A;
+}
+
+@media (min-width: 800px){
+    header {
+        display: grid;
+        grid-template-columns: 33% 33% 21% 12%;
+        grid-template-rows: auto auto auto auto;
+        grid-template-areas:
+    ". header-text . gamemodes-text"
+    ". header-text . classic-btn"
+    ". header-text . sparta-btn"
+    ". header-text . troy-btn";
+    }
+
+    #gamemodes-text{
+        grid-area: gamemodes-text;
+        visibility: visible !important;
+        margin: 0 0 0.5vh;
+        font-size: 1rem;
+    }
+}
+
+#header-text {
+    grid-area: header-text;
+}
+
+#gamemodes-text{
+    grid-area: gamemodes-text;
+    visibility: hidden;
+    margin: 0 0 0.5vh;
+    font-size: 1rem;
+}
+
+#classic-btn {
+    grid-area: classic-btn;
+}
+
+#sparta-btn {
+    grid-area: sparta-btn;
+}
+
+#troy-btn {
+    grid-area: troy-btn;
+}
+
+.grid-item {
+    /*border: 1px dotted #B823C1;*/
+    margin: 0.2vh;
+}
+
+#classic-btn, #sparta-btn, #troy-btn{
+    padding: 0.4rem 0 0.4rem;
+    border-radius: 5px;
+    border: none;
+    background: #fefae0;
+    color: #283618;
+    font-family: 'Arvo', serif;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#classic-btn:hover, #sparta-btn:hover, #troy-btn:hover{
+    background-color: #E9C46A;
 }
 
 #heaven-black, #heaven-white {
@@ -28,6 +98,11 @@ header {
     display: inline-block;
     margin: 0;
     width: max-content;
+}
+
+#game-wrapper{
+    display: flex;
+    border: 1px solid green;
 }
 
 table {
@@ -85,6 +160,11 @@ td {
     animation-timing-function: ease-in;
     animation-duration: 1.5s;
     animation-iteration-count: infinite;
+}
+
+footer {
+    text-align: center;
+    font-size: 0.8rem;
 }
 
 @keyframes animation_blink {
