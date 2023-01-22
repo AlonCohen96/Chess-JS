@@ -1,6 +1,4 @@
 // Code by Alon Cohen
-//-to-do:
-// instead of border around valid fields, make background color effect change or smth
 
 function startNewGame() {
     function pickField(event) {
@@ -1068,18 +1066,17 @@ function startNewGame() {
         }
     }
 
-    let pieces
-
     // Creating pieces
+    let pieces
     if (currentGameMode === 'classic-btn') {
         pieces = [
-            /*new WhitePawn('white', true, 'a2', '♙'),
+            new WhitePawn('white', true, 'a2', '♙'),
             new WhitePawn('white', true, 'b2', '♙'),
             new WhitePawn('white', true, 'c2', '♙'),
             new WhitePawn('white', true, 'd2', '♙'),
             new WhitePawn('white', true, 'e2', '♙'),
             new WhitePawn('white', true, 'f2', '♙'),
-            new WhitePawn('white', true, 'g2', '♙'),*/
+            new WhitePawn('white', true, 'g2', '♙'),
             new WhitePawn('white', true, 'h2', '♙'),
             new Rook('white', true, 'a1', '♖'),
             new Rook('white', true, 'h1', '♖'),
@@ -1093,7 +1090,7 @@ function startNewGame() {
             new Queen('white', true, 'd1', '♕'),
             new King('white', true, 'e1', '♔'),
 
-            /*new BlackPawn('black', false, 'a7', '♟'),
+            new BlackPawn('black', false, 'a7', '♟'),
             new BlackPawn('black', false, 'b7', '♟'),
             new BlackPawn('black', false, 'c7', '♟'),
             new BlackPawn('black', false, 'd7', '♟'),
@@ -1110,7 +1107,7 @@ function startNewGame() {
 
             new Bishop('black', false, 'c8', '♝'),
             new Bishop('black', false, 'f8', '♝'),
-            new Queen('black', false, 'd8', '♛'),*/
+            new Queen('black', false, 'd8', '♛'),
             new King('black', false, 'e8', '♚')
         ]
     } else if (currentGameMode === 'sparta-btn') {

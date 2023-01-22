@@ -1,10 +1,4 @@
 // Code by Alon Cohen
-//-to-do:
-// instead of border around valid fields, make background color effect change or smth
-// Rochade
-// only pieces with validfields or valid targets blink and hover
-// ad clickable link for react-native version
-// additional game modes: trojan horse, spartan battle, battle royale, boss fight?
 
 function startNewGame() {
     function pickField(event) {
