@@ -1,5 +1,5 @@
 # Chess-JS
-A chess game made with JavaScript with some fun gamemodes
+A chess game written in JavaScript with some fun gamemodes.
 
 Try out the [Live Demo](https://splendorous-taffy-82a2a4.netlify.app/)!
 
