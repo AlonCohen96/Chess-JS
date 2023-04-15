@@ -1,5 +1,5 @@
 # Chess-JS
-A 2 player mobile version of Chess written in entirely in Vanilla JavaScript, HMTL and CSS with some fun extra game modes. Best played on a phone or tablet.
+A slick and elegant 2 player mobile version of Chess written in entirely in Vanilla JavaScript, HMTL and CSS with some fun extra game modes. Best played on a phone or tablet.
 
 Try out the [Live Demo](https://splendorous-taffy-82a2a4.netlify.app/) or scan the QR Code!
 
