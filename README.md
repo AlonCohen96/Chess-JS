@@ -3,5 +3,4 @@ A 2 player mobile version of Chess written in entirley in Vanilla JavaScript, HM
 
 Try out the [Live Demo](https://splendorous-taffy-82a2a4.netlify.app/)!
 
-![combined](https://user-images.githubusercontent.com/27009186/232223373-bad378dc-a698-4ec3-8b5f-e11901b9abe5.png)
-
+![combined2](https://user-images.githubusercontent.com/27009186/232223630-db56f214-374a-4b01-9ad5-f90913f6bae9.png)
