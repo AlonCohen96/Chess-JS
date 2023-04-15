@@ -1,6 +1,7 @@
 # Chess-JS
-A chess game written in JavaScript with some fun gamemodes.
+A 2 player mobile version of Chess written in entirley in Vanilla JavaScript, HMTL and CSS with some fun extra gamemodes. Best played on a phone or tablet.
 
 Try out the [Live Demo](https://splendorous-taffy-82a2a4.netlify.app/)!
 
-![chess_pixel_quite_black_portrait](https://user-images.githubusercontent.com/27009186/231478140-98165c02-03c6-4e29-993b-a21be49c63e3.png)
+![combined](https://user-images.githubusercontent.com/27009186/232223373-bad378dc-a698-4ec3-8b5f-e11901b9abe5.png)
+
